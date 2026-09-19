@@ -1,0 +1,6 @@
+{
+  "name": "AKSHORA – AI-Powered Digital Marketing & Branding Agency",
+  "description": "Full-stack web application for AKSHORA featuring dynamic services, interactive AI marketing assistant, client enquiry workflow, and secure admin management dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

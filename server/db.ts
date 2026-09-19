@@ -1,0 +1,434 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import type { Service, FAQItem, Enquiry, WebsiteSettings, AdminUser } from '../src/types.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = path.resolve(process.cwd(), 'data');
+const DB_FILE = path.join(DATA_DIR, 'database.json');
+
+export interface DatabaseSchema {
+  admin: {
+    username: string;
+    passwordHash: string; // Plain/simple token for prototype demonstration
+    name: string;
+    role: 'superadmin' | 'admin';
+  };
+  services: Service[];
+  faqs: FAQItem[];
+  enquiries: Enquiry[];
+  settings: WebsiteSettings;
+}
+
+const DEFAULT_SERVICES: Service[] = [
+  {
+    id: 'srv-1',
+    name: 'Search Engine Optimization (SEO)',
+    slug: 'seo',
+    category: 'Organic Growth',
+    shortDescription: 'Dominate search rankings with AI-grounded keyword intelligence, technical SEO, and semantic authority building.',
+    description: 'Our AI-driven SEO architecture analyzes millions of real-time search queries, competitor gaps, and search engine algorithmic shifts. We optimize your technical foundation, craft high-intent semantic content clusters, and build high-authority backlink profiles that drive compounding organic traffic.',
+    benefits: [
+      'Deep AI Semantic Keyword & Intent Clustering',
+      'Technical Core Web Vitals & Crawlability Optimization',
+      'High-Authority White-Hat Backlink Acquisition',
+      'Local Map Pack & Global Search Engine Domination',
+      'Real-Time SERP Movement Tracking & Monthly Audits'
+    ],
+    icon: 'Search',
+    startingPrice: '$799/month',
+    isActive: true,
+    isFeatured: true,
+    faqs: [
+      {
+        question: 'How quickly will we see results with AKSHORA SEO?',
+        answer: 'SEO is a compounding organic channel. Initial technical and indexing wins occur within 30-45 days, with substantial high-volume ranking jumps and organic revenue scaling typically within 3 to 6 months.'
+      },
+      {
+        question: 'Do you handle both local and national/international SEO?',
+        answer: 'Yes. We customize schemas and geotargeted content hubs for regional physical businesses or scale international hreflang architectures for global e-commerce and SaaS.'
+      }
+    ],
+    createdAt: '2026-01-10T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-2',
+    name: 'Meta Ads Management (FB & Instagram)',
+    slug: 'meta-ads',
+    category: 'Paid Performance',
+    shortDescription: 'High-converting visual ad campaigns engineered with predictive creative testing, hyper-targeted cohorts, and ROAS scaling.',
+    description: 'We blend high-converting aesthetic video/image hooks with Meta Advantage+ AI targeting algorithms. We architect multi-tier funnels (Prospecting, Consideration, Dynamic Retargeting) engineered to minimize Customer Acquisition Cost (CAC) and maximize Return on Ad Spend (ROAS).',
+    benefits: [
+      'High-Velocity Creative Concepting (Video Hooks, UGC, Carousels)',
+      'Meta Conversions API (CAPI) & First-Party Pixel Tracking Setup',
+      'Algorithmic Advantage+ Audience Modeling & Lookalike Expansion',
+      'Dynamic Retargeting Funnels with Cart Abandonment Triggers',
+      'Daily Budget Allocation & Ad Fatigue Monitoring'
+    ],
+    icon: 'Target',
+    startingPrice: '$999/month + Ad Spend',
+    isActive: true,
+    isFeatured: true,
+    faqs: [
+      {
+        question: 'What is the recommended minimum monthly ad spend for Meta Ads?',
+        answer: 'We recommend a minimum ad budget of $1,500/month directly paid to Meta to give the AI algorithm sufficient conversion data to train and scale effectively.'
+      },
+      {
+        question: 'Who produces the ad creatives and copy?',
+        answer: 'AKSHORA handles the entire creative lifecycle: scriptwriting, AI-assisted video editing, static visuals, motion graphics, and persuasive copywriting.'
+      }
+    ],
+    createdAt: '2026-01-12T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-3',
+    name: 'Google Ads Management',
+    slug: 'google-ads',
+    category: 'Paid Performance',
+    shortDescription: 'Capture high-intent buyers the exact second they search with precision Search, Performance Max, and YouTube Ads.',
+    description: 'Turn buyer intent into booked calls and direct sales. We build laser-targeted Google Search campaigns, Performance Max asset groups, and high-retention YouTube video campaigns with continuous negative keyword hygiene and Smart Bidding ROAS strategies.',
+    benefits: [
+      'Hyper-Intent Search Query Harvesting & Negative Keyword Filtering',
+      'Omnichannel Performance Max (PMax) Feed Optimization',
+      'Enhanced Conversion Tracking via Google Tag Manager',
+      'High-Converting Custom Landing Page Recommendations',
+      'Target CPA & Target ROAS Smart Bidding Architecture'
+    ],
+    icon: 'TrendingUp',
+    startingPrice: '$950/month + Ad Spend',
+    isActive: true,
+    isFeatured: true,
+    faqs: [
+      {
+        question: 'Should I do Google Ads or Meta Ads first?',
+        answer: 'If people are actively searching for your service (e.g. legal, emergency repairs, B2B SaaS, specific products), Google Ads captures immediate intent. Meta Ads excels at generating desire and brand awareness. Often, a hybrid approach yields the highest blended ROAS.'
+      }
+    ],
+    createdAt: '2026-01-14T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-4',
+    name: 'Social Media Marketing & Community Growth',
+    slug: 'social-media-marketing',
+    category: 'Brand & Social',
+    shortDescription: 'Build an engaged, devoted community across LinkedIn, Instagram, X, and TikTok with viral content rhythms.',
+    description: 'Elevate your brand authority and maintain consistent audience touchpoints. Our team develops monthly content calendars, viral short-form reels/TikToks, carousel thought leadership, and proactive community engagement that converts passive followers into loyal advocates.',
+    benefits: [
+      'Monthly Strategic Content Calendar & Aesthetic Feed Planning',
+      'Short-Form Video Scripting & AI Post-Production (Reels/TikTok)',
+      'Thought Leadership Ghostwriting for LinkedIn & X',
+      'Active Community Management & Direct Message Engagement',
+      'Hashtag & Sound Trend Research Engine'
+    ],
+    icon: 'Megaphone',
+    startingPrice: '$650/month',
+    isActive: true,
+    isFeatured: false,
+    faqs: [
+      {
+        question: 'How many posts per week do you produce?',
+        answer: 'Our standard package includes 4 to 5 high-impact posts per week across your primary chosen platforms, including 2-3 short-form videos.'
+      }
+    ],
+    createdAt: '2026-01-16T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-5',
+    name: 'Modern Website Development & Conversion UI/UX',
+    slug: 'website-development',
+    category: 'Technology & Design',
+    shortDescription: 'Blazing-fast, responsive web applications and landing pages engineered specifically to maximize conversion rates.',
+    description: 'Your digital storefront should be an unstoppable sales vehicle. We craft bespoke, responsive websites utilizing modern frameworks (React, Next.js, Tailwind) equipped with frictionless conversion funnels, lightning-fast load times, and crystal-clear analytics instrumentation.',
+    benefits: [
+      'Bespoke Mobile-First Responsive Architecture',
+      '95+ Google Lighthouse Speed & Core Web Vitals Performance',
+      'Strategic Wireframing & High-Converting Landing Page UX',
+      'Full CMS / Headless Integration for Frictionless Content Updates',
+      'Integrated Form Tracking, Heatmaps, and Conversion Funnels'
+    ],
+    icon: 'Code',
+    startingPrice: '$1,800 one-time',
+    isActive: true,
+    isFeatured: true,
+    faqs: [
+      {
+        question: 'How long does a website project take from start to finish?',
+        answer: 'A custom conversion landing page typically takes 7-10 business days. A comprehensive multi-page corporate or e-commerce web platform is typically completed in 3 to 5 weeks.'
+      }
+    ],
+    createdAt: '2026-01-18T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-6',
+    name: 'AI-Powered Content Creation & Copywriting',
+    slug: 'ai-content-creation',
+    category: 'Creative & Content',
+    shortDescription: 'Scale research-backed articles, high-converting ad copy, and lead magnets at 5x speed with human editorial oversight.',
+    description: 'Harness the synergy of state-of-the-art AI generation paired with veteran human editorial polish. We produce deeply researched long-form articles, whitepapers, email sequences, and ad copy that pass all quality benchmarks while dramatically reducing production timelines.',
+    benefits: [
+      'Deep Industry Research & Fact-Checked Semantic Content',
+      'SEO-Optimized Long-Form Articles & Case Studies',
+      'Direct-Response Ad Copywriting & Hook Variations',
+      'Lead Magnets (Ebooks, Cheat Sheets, Interactive Guides)',
+      '100% Plagiarism-Free, Human-Polished Voice Matching'
+    ],
+    icon: 'Sparkles',
+    startingPrice: '$550/month',
+    isActive: true,
+    isFeatured: false,
+    createdAt: '2026-01-20T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-7',
+    name: 'Branding & Visual Identity Design',
+    slug: 'branding-identity',
+    category: 'Creative & Content',
+    shortDescription: 'Craft an unforgettable brand aesthetic: memorable logos, color palettes, typography hierarchies, and style guidelines.',
+    description: 'A remarkable brand creates instant perceived value and unlocks premium pricing power. AKSHORA designs comprehensive corporate identity systems including logos, iconographies, packaging, digital assets, and brand design guidelines that differentiate you in competitive markets.',
+    benefits: [
+      'Primary, Secondary, and Responsive Sub-Mark Logo Systems',
+      'Psychology-Backed Color Schemes & Typographic Pairings',
+      'Comprehensive Brand Style Guide & Social Asset Templates',
+      'Vector Asset Suites & High-Resolution Print-Ready Deliverables',
+      'Trademark-Ready Creative Assets'
+    ],
+    icon: 'Palette',
+    startingPrice: '$1,200 one-time',
+    isActive: true,
+    isFeatured: false,
+    createdAt: '2026-01-22T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-8',
+    name: 'Email Marketing & Customer Lifecycle Automation',
+    slug: 'email-marketing',
+    category: 'Organic Growth',
+    shortDescription: 'Turn one-time buyers into lifelong repeat customers through automated drip journeys, SMS alerts, and personalized newsletters.',
+    description: 'Own your audience away from rented social platforms. We build hyper-segmented Klaviyo and Mailchimp automation flows (Welcome sequences, Abandoned Browse/Cart, Win-backs, VIP Tiers) that generate 25-40% of total company revenue on autopilot.',
+    benefits: [
+      'Customer Journey Mapping & Behavioral Segmentation',
+      'High-Deliverability Domain Authentication (DKIM/DMARC/SPF)',
+      'Automated Lifecycle Flows (Welcome, Cart Abandon, Post-Purchase)',
+      'Weekly/Bi-weekly Branded High-Open-Rate Newsletters',
+      'A/B Subject Line, Preview Text, & Send-Time Testing'
+    ],
+    icon: 'Mail',
+    startingPrice: '$600/month',
+    isActive: true,
+    isFeatured: false,
+    createdAt: '2026-01-24T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  },
+  {
+    id: 'srv-9',
+    name: 'High-Performance B2B Lead Generation',
+    slug: 'lead-generation',
+    category: 'Paid Performance',
+    shortDescription: 'Consistent qualified sales pipelines via multi-channel cold outreach, targeted lead qualification, and inbound funnels.',
+    description: 'Fill your sales reps calendars with ready-to-buy decision-makers. We combine verified prospect scraping, AI personalized email sequences, LinkedIn outreach automation, and targeted pre-qualification forms so you only speak with verified prospects.',
+    benefits: [
+      'Verified Decision-Maker Contact Lists (Apollo, ZoomInfo, Sales Nav)',
+      'Multi-Inbox Warmup & Cold Email Infrastructure Setup',
+      'AI-Personalized First Lines & Value-Driven Sequences',
+      'Automated Calendar Booking & CRM Lead Syncing',
+      'Strict Weekly Qualified Call Volume Guarantees'
+    ],
+    icon: 'Zap',
+    startingPrice: '$1,400/month',
+    isActive: true,
+    isFeatured: true,
+    createdAt: '2026-01-26T10:00:00.000Z',
+    updatedAt: '2026-02-15T12:00:00.000Z'
+  }
+];
+
+const DEFAULT_FAQS: FAQItem[] = [
+  {
+    id: 'faq-1',
+    question: 'What makes AKSHORA different from traditional digital marketing agencies?',
+    answer: 'Traditional agencies rely heavily on slow manual guesswork and outdated quarterly playbooks. AKSHORA integrates modern AI analytics, real-time creative generation, and rapid predictive testing with seasoned human marketing strategists. This allows us to scale campaigns 4x faster and achieve significantly higher ROAS.',
+    category: 'General Agency',
+    isActive: true,
+    order: 1
+  },
+  {
+    id: 'faq-2',
+    question: 'How do you determine which marketing channels are best for my business?',
+    answer: 'During our initial onboarding and AI Audit, we analyze your industry, ticket size, customer lifetime value (LTV), target demographic, and competitor advertising footprint. For example, high-intent B2B usually thrives on Google Search & LinkedIn, while visually driven consumer brands scale best on Meta and TikTok.',
+    category: 'Strategy & Services',
+    isActive: true,
+    order: 2
+  },
+  {
+    id: 'faq-3',
+    question: 'Do you offer custom pricing packages or fixed monthly retainers?',
+    answer: 'We provide transparent tier-based retainers as well as bespoke enterprise packages tailored to your specific monthly revenue goals and advertising budget. You can review starting prices directly on our Services page or submit an enquiry for a tailored proposal.',
+    category: 'Pricing & Contracts',
+    isActive: true,
+    order: 3
+  },
+  {
+    id: 'faq-4',
+    question: 'Are we locked into long-term annual contracts?',
+    answer: 'No. We operate primarily on flexible 3-month or 6-month performance agreements with simple 30-day notice terms. We believe in retaining clients through measurable ROI and revenue growth, not restrictive lock-in clauses.',
+    category: 'Pricing & Contracts',
+    isActive: true,
+    order: 4
+  },
+  {
+    id: 'faq-5',
+    question: 'How often will we receive reports and performance updates?',
+    answer: 'You receive 24/7 access to a real-time live reporting dashboard (tracking spend, leads, CAC, ROAS, and conversions) plus weekly executive email recaps and bi-weekly strategic video review calls with your dedicated account lead.',
+    category: 'Reporting & Support',
+    isActive: true,
+    order: 5
+  },
+  {
+    id: 'faq-6',
+    question: 'Can the AKSHORA AI Assistant help me right now?',
+    answer: 'Yes! Click the floating AI robot in the bottom right corner. It can diagnose your business type, recommend the exact marketing channels suited for your goals, clarify pricing, and pre-fill an enquiry directly for our senior strategy team.',
+    category: 'AI Assistant',
+    isActive: true,
+    order: 6
+  }
+];
+
+const DEFAULT_ENQUIRIES: Enquiry[] = [
+  {
+    id: 'AKSH-81042',
+    fullName: 'Sophia Martinez',
+    businessName: 'Luxe Botanica Skincare',
+    email: 'sophia@luxebotanica.com',
+    phone: '+1 (555) 234-5678',
+    website: 'https://luxebotanica.example.com',
+    businessCategory: 'Fashion & Beauty',
+    servicesInterestedIn: ['Meta Ads Management (FB & Instagram)', 'AI-Powered Content Creation & Copywriting'],
+    monthlyBudget: '$3,000 - $10,000',
+    businessGoals: ['Increase sales', 'Build an online presence'],
+    projectDescription: 'We are an organic clean-beauty skincare brand launching a new peptide serum line. Looking to scale direct-to-consumer online sales with video ad creative and high-converting retargeting funnels.',
+    preferredContactMethod: 'Email',
+    status: 'New',
+    notes: 'High potential DTC client. Review their Shopify store before the discovery call.',
+    createdAt: '2026-03-18T14:22:00.000Z',
+    updatedAt: '2026-03-18T14:22:00.000Z'
+  },
+  {
+    id: 'AKSH-79215',
+    fullName: 'Marcus Vance',
+    businessName: 'Vance Capital Partners',
+    email: 'marcus@vancecapital.org',
+    phone: '+1 (555) 890-1234',
+    website: 'https://vancecapital.example.com',
+    businessCategory: 'Startup',
+    servicesInterestedIn: ['High-Performance B2B Lead Generation', 'Search Engine Optimization (SEO)'],
+    monthlyBudget: '$10,000+',
+    businessGoals: ['Generate leads', 'Improve brand awareness'],
+    projectDescription: 'Need to generate accredited investor leads and qualified B2B SaaS founders looking for Series A growth funding.',
+    preferredContactMethod: 'Phone',
+    status: 'Contacted',
+    notes: 'Initial intro call scheduled for Tuesday 10 AM EST. Marcus prefers phone check-ins.',
+    createdAt: '2026-03-16T09:15:00.000Z',
+    updatedAt: '2026-03-17T11:00:00.000Z'
+  },
+  {
+    id: 'AKSH-65431',
+    fullName: 'Dr. Priya Nair',
+    businessName: 'Nair Wellness & Ortho Clinic',
+    email: 'priya@nairwellness.com',
+    phone: '+1 (555) 456-7890',
+    website: 'https://nairwellness.example.com',
+    businessCategory: 'Healthcare',
+    servicesInterestedIn: ['Google Ads Management', 'Modern Website Development & Conversion UI/UX'],
+    monthlyBudget: '$1,000 - $3,000',
+    businessGoals: ['Generate leads', 'Increase website traffic'],
+    projectDescription: 'We want local patients searching for knee pain treatments and physical therapy to book appointments directly online.',
+    preferredContactMethod: 'WhatsApp',
+    status: 'Follow-up',
+    notes: 'Sent draft proposal with Google Local Search campaign breakdown.',
+    createdAt: '2026-03-14T16:40:00.000Z',
+    updatedAt: '2026-03-16T15:30:00.000Z'
+  }
+];
+
+const DEFAULT_SETTINGS: WebsiteSettings = {
+  heroHeadline: 'Smarter Marketing. Stronger Brands. Powered by AI.',
+  heroSubheading: 'AKSHORA helps businesses grow through intelligent digital marketing, creative branding, and AI-powered strategies.',
+  heroIntro: 'We combine predictive marketing intelligence, high-velocity creative engineering, and seasoned agency execution to accelerate brand growth, minimize acquisition costs, and maximize revenue.',
+  aboutText: 'AKSHORA is a next-generation digital marketing and branding powerhouse. We were founded on the conviction that traditional agency models are too slow, fragmented, and reliant on manual guesswork. By fusing proprietary AI-driven marketing workflows with world-class creative directors, we deliver compounding organic visibility and hyper-profitable paid acquisition for ambitious modern brands.',
+  mission: 'To democratize hyper-intelligent digital marketing, empowering bold brands to dominate their categories through scientific AI workflows and unforgettable human storytelling.',
+  vision: 'To be the global benchmark for AI-empowered agency excellence, where every campaign is mathematically optimized for profit and emotionally crafted for longevity.',
+  contactEmail: 'goyalakshita194@gmail.com',
+  contactPhone: '+91 7877602560',
+  officeAddress: '',
+  workingHours: 'Monday – Saturday: 9:00 AM – 7:00 PM IST',
+  socialLinks: {
+    linkedin: '',
+    twitter: '',
+    instagram: 'https://www.instagram.com/akshora.digital/',
+    facebook: '',
+    youtube: ''
+  },
+  featuredServiceIds: ['srv-1', 'srv-2', 'srv-3', 'srv-5']
+};
+
+function ensureDataDirectory() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+export function readDatabase(): DatabaseSchema {
+  ensureDataDirectory();
+  if (!fs.existsSync(DB_FILE)) {
+    const initialDb: DatabaseSchema = {
+      admin: {
+        username: 'admin',
+        passwordHash: 'akshora2026!',
+        name: 'AKSHORA Lead Administrator',
+        role: 'superadmin'
+      },
+      services: DEFAULT_SERVICES,
+      faqs: DEFAULT_FAQS,
+      enquiries: DEFAULT_ENQUIRIES,
+      settings: DEFAULT_SETTINGS
+    };
+    fs.writeFileSync(DB_FILE, JSON.stringify(initialDb, null, 2), 'utf-8');
+    return initialDb;
+  }
+
+  try {
+    const raw = fs.readFileSync(DB_FILE, 'utf-8');
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error('Error reading database file, returning default schema:', err);
+    return {
+      admin: {
+        username: 'admin',
+        passwordHash: 'akshora2026!',
+        name: 'AKSHORA Lead Administrator',
+        role: 'superadmin'
+      },
+      services: DEFAULT_SERVICES,
+      faqs: DEFAULT_FAQS,
+      enquiries: DEFAULT_ENQUIRIES,
+      settings: DEFAULT_SETTINGS
+    };
+  }
+}
+
+export function writeDatabase(data: DatabaseSchema): void {
+  ensureDataDirectory();
+  // Safe write using temporary file to prevent corruption
+  const tempFile = `${DB_FILE}.tmp`;
+  fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
+  fs.renameSync(tempFile, DB_FILE);
+}
